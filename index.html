@@ -1,220 +1,606 @@
-html_content = """<!DOCTYPE html>
+seotda_html = """<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>오늘 비 올 확률 - 우산 챙길까?</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>한판 섯다 (Single Seotda Game)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Jua&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            user-select: none;
         }
 
         body {
-            font-family: 'Pretendard', sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Gowun Batang', serif;
+            background: #0d2818;
+            background-image: radial-gradient(#164a29 2px, transparent 2px);
+            background-size: 24px 24px;
             color: #f8fafc;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 15px;
         }
 
-        .container {
-            background: rgba(30, 41, 59, 0.75);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 28px;
-            padding: 40px 30px;
-            text-align: center;
-            max-width: 480px;
+        /* 게임 보드 판 메인 테두리 */
+        .board {
+            background: #113820;
+            border: 12px solid #5c3a21;
+            border-radius: 36px;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8), 0 20px 50px rgba(0,0,0,0.7);
+            max-width: 800px;
             width: 100%;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-        }
-
-        h1 {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #38bdf8;
-            margin-bottom: 8px;
-        }
-
-        p.subtitle {
-            font-size: 0.95rem;
-            color: #94a3b8;
-            margin-bottom: 30px;
-        }
-
-        .status-card {
-            background: rgba(15, 23, 42, 0.6);
-            border-radius: 20px;
-            padding: 30px 20px;
-            margin-bottom: 30px;
-            border: 1px dashed rgba(56, 189, 248, 0.3);
-            min-height: 220px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* 헤더 / 정보창 */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
+            background: rgba(0,0,0,0.4);
+            padding: 15px 25px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .weather-icon {
-            font-size: 5rem;
-            line-height: 1.2;
-            margin-bottom: 12px;
+        .title {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.8rem;
+            color: #fbbf24;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         }
 
-        .rain-percentage {
-            font-size: 2.2rem;
-            font-weight: 800;
-            color: #f8fafc;
-            margin-bottom: 6px;
-        }
-
-        .umbrella-advice {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #38bdf8;
-        }
-
-        .btn-check {
+        .money-info {
+            display: flex;
+            gap: 20px;
+            font-family: 'Jua', sans-serif;
             font-size: 1.2rem;
-            font-weight: 600;
-            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-            color: #ffffff;
-            border: none;
-            padding: 16px 36px;
-            border-radius: 50px;
+        }
+
+        .money-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .money-val {
+            color: #4ade80;
+        }
+
+        /* 영억 (AI & Player) */
+        .player-area {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            min-height: 200px;
+            border: 1px dashed rgba(255,255,255,0.15);
+        }
+
+        .area-label {
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.1rem;
+            color: #94a3b8;
+        }
+
+        .cards-wrapper {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        /* 화투 패 디자인 (SVG 인라인 시각화) */
+        .card {
+            width: 90px;
+            height: 140px;
+            background: #b91c1c;
+            border: 4px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
-            box-shadow: 0 8px 20px rgba(2, 132, 199, 0.4);
+        }
+
+        .card.back {
+            background: #b91c1c;
+            background-image: repeating-linear-gradient(45deg, #991b1b 0, #991b1b 10px, #b91c1c 10px, #b91c1c 20px);
+            border: 4px solid #f8fafc;
+        }
+
+        .card.back::after {
+            content: "🎴";
+            font-size: 2.5rem;
+            margin: auto;
+        }
+
+        .card.front {
+            background: #f8fafc;
+            border: 4px solid #b91c1c;
+            color: #0f172a;
+        }
+
+        .card-month {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #b91c1c;
+            align-self: flex-start;
+        }
+
+        .card-type {
+            font-size: 0.8rem;
+            background: #ef4444;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: bold;
+            align-self: flex-end;
+        }
+
+        .card-type.kwang { background: #d97706; }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin: auto;
+        }
+
+        .jokbo-badge {
+            margin-top: 12px;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.4rem;
+            color: #fbbf24;
+            min-height: 32px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* 판돈 중앙 */
+        .pot-area {
+            text-align: center;
+            background: rgba(234, 179, 8, 0.15);
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            border-radius: 50px;
+            padding: 10px 30px;
+            align-self: center;
+            font-family: 'Jua', sans-serif;
+            font-size: 1.3rem;
+            color: #fef08a;
+        }
+
+        /* 컨트롤 및 베팅 버튼 */
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            font-family: 'Jua', sans-serif;
+            font-size: 1.1rem;
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
             transition: all 0.2s ease;
-            width: 100%;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
             outline: none;
         }
 
-        .btn-check:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 24px rgba(2, 132, 199, 0.5);
-            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
-        .btn-check:active {
-            transform: translateY(1px);
+        .btn-start { background: #22c55e; color: white; font-size: 1.3rem; width: 100%; max-width: 300px; }
+        .btn-start:hover:not(:disabled) { background: #16a34a; transform: translateY(-2px); }
+
+        .btn-call { background: #3b82f6; color: white; }
+        .btn-call:hover:not(:disabled) { background: #2563eb; transform: translateY(-2px); }
+
+        .btn-raise { background: #eab308; color: #1e293b; }
+        .btn-raise:hover:not(:disabled) { background: #ca8a04; transform: translateY(-2px); }
+
+        .btn-die { background: #ef4444; color: white; }
+        .btn-die:hover:not(:disabled) { background: #dc2626; transform: translateY(-2px); }
+
+        /* 결과 overlay 메시지 */
+        .message-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 23, 42, 0.95);
+            border: 3px solid #fbbf24;
+            border-radius: 24px;
+            padding: 30px 40px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            width: 85%;
+            max-width: 400px;
         }
 
-        .pop-anim {
+        .message-box h2 {
+            font-family: 'Jua', sans-serif;
+            font-size: 2.2rem;
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+
+        .message-box p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #cbd5e1;
+        }
+
+        .message-box .btn {
+            background: #fbbf24;
+            color: #0f172a;
+            width: 100%;
+        }
+
+        .pop-animation {
             animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         @keyframes pop {
-            0% { transform: scale(0.6); opacity: 0; }
+            0% { transform: scale(0.5); opacity: 0; }
             100% { transform: scale(1); opacity: 1; }
-        }
-
-        footer {
-            margin-top: 25px;
-            font-size: 0.8rem;
-            color: #64748b;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>오늘 비가 올까? 🌧️</h1>
-        <p class="subtitle">실시간 위치 기반으로 강수확률을 조회해보세요.</p>
-
-        <div class="status-card">
-            <div id="icon" class="weather-icon">🌈</div>
-            <div id="rain-percent" class="rain-percentage">--%</div>
-            <div id="advice" class="umbrella-advice">버튼을 눌러 확인하세요!</div>
+    <div class="board">
+        <!-- 상단 헤더 -->
+        <div class="game-header">
+            <div class="title">🎴 한판 섯다</div>
+            <div class="money-info">
+                <div class="money-tag">컴퓨터: <span id="ai-money" class="money-val">100,000</span>원</div>
+                <div class="money-tag">내 잔액: <span id="player-money" class="money-val">100,000</span>원</div>
+            </div>
         </div>
 
-        <button class="btn-check" onclick="getRainProbability()">오늘 비 올 확률 ☂️</button>
+        <!-- AI 영역 -->
+        <div class="player-area">
+            <div class="area-label">🤖 컴퓨터 (상대)</div>
+            <div class="cards-wrapper" id="ai-cards">
+                <div class="card back"></div>
+                <div class="card back"></div>
+            </div>
+            <div class="jokbo-badge" id="ai-jokbo"></div>
+        </div>
+
+        <!-- 판돈 표시 -->
+        <div class="pot-area">
+            💰 현재 판돈: <span id="pot-money" style="color: #4ade80;">0</span>원
+        </div>
+
+        <!-- 플레이어 영역 -->
+        <div class="player-area">
+            <div class="area-label">👤 나 (플레이어)</div>
+            <div class="cards-wrapper" id="player-cards">
+                <div class="card back"></div>
+                <div class="card back"></div>
+            </div>
+            <div class="jokbo-badge" id="player-jokbo">게임 시작 버튼을 눌러주세요</div>
+        </div>
+
+        <!-- 컨트롤 버튼 -->
+        <div class="controls">
+            <button id="btn-start" class="btn btn-start" onclick="startGame()">게임 시작 (기본판돈 5,000원)</button>
+            <button id="btn-call" class="btn btn-call" onclick="playerAction('call')" disabled>콜 (Call)</button>
+            <button id="btn-raise" class="btn btn-raise" onclick="playerAction('raise')" disabled>레이즈 (+10,000원)</button>
+            <button id="btn-die" class="btn btn-die" onclick="playerAction('die')" disabled>다이 (Die)</button>
+        </div>
+
+        <!-- 결과 모달 메시지 -->
+        <div id="message-box" class="message-box">
+            <h2 id="msg-title">승리!</h2>
+            <p id="msg-desc">상대보다 높은 족보입니다.</p>
+            <button class="btn" onclick="closeMessage()">확인</button>
+        </div>
     </div>
 
-    <footer>
-        <p>Open-Meteo Weather API 연동</p>
-    </footer>
-
     <script>
-        async function getRainProbability() {
-            const iconEl = document.getElementById('icon');
-            const percentEl = document.getElementById('rain-percent');
-            const adviceEl = document.getElementById('advice');
+        // 화투 20장 데이터 정의
+        const DECK_DATA = [
+            { id: 1, month: 1, type: 'kwang', name: '1월 광', icon: '☀️' },
+            { id: 2, month: 1, type: 'pi', name: '1월 피', icon: '🌲' },
+            { id: 3, month: 2, type: 'yeol', name: '2월 꾀꼬리', icon: '🐦' },
+            { id: 4, month: 2, type: 'pi', name: '2월 피', icon: '🌸' },
+            { id: 5, month: 3, type: 'kwang', name: '3월 광', icon: '🌸' },
+            { id: 6, month: 3, type: 'pi', name: '3월 피', icon: '🍃' },
+            { id: 7, month: 4, type: 'yeol', name: '4월 흑싸리', icon: '🌿' },
+            { id: 8, month: 4, type: 'pi', name: '4월 피', icon: '🌱' },
+            { id: 9, month: 5, type: 'yeol', name: '5월 난초', icon: '🌾' },
+            { id: 10, month: 5, type: 'pi', name: '5월 피', icon: '🍃' },
+            { id: 11, month: 6, type: 'yeol', name: '6월 모란', icon: '🦋' },
+            { id: 12, month: 6, type: 'pi', name: '6월 피', icon: '🌺' },
+            { id: 13, month: 7, type: 'yeol', name: '7월 멧돼지', icon: '🐗' },
+            { id: 14, month: 7, type: 'pi', name: '7월 피', icon: '🌿' },
+            { id: 15, month: 8, type: 'kwang', name: '8월 광', icon: '🌕' },
+            { id: 16, month: 8, type: 'pi', name: '8월 피', icon: '🌾' },
+            { id: 17, month: 9, type: 'yeol', name: '9월 국준', icon: '🍶' },
+            { id: 18, month: 9, type: 'pi', name: '9월 피', icon: '🌼' },
+            { id: 19, month: 10, type: 'yeol', name: '10월 사슴', icon: '🦌' },
+            { id: 20, month: 10, type: 'pi', name: '10월 피', icon: '🍁' }
+        ];
 
-            percentEl.textContent = '조회 중...';
-            adviceEl.textContent = '기상 데이터를 불러오는 중입니다.';
+        // 게임 상태 변수
+        let playerMoney = 100000;
+        let aiMoney = 100000;
+        let potMoney = 0;
+        let baseBet = 5000;
+        let currentDeck = [];
+        let playerCards = [];
+        let aiCards = [];
+        let isReMatch = false;
 
-            // 위치 정보를 받아와 실제 날씨 조회 (실패 시 서울 좌표 기본 사용)
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        fetchWeather(position.coords.latitude, position.coords.longitude);
-                    },
-                    () => {
-                        // 위치 권한 거부 시 서울 기준
-                        fetchWeather(37.5665, 126.9780);
-                    }
-                );
-            } else {
-                fetchWeather(37.5665, 126.9780);
-            }
+        // 음수 방지 및 화폐 포맷
+        function formatMoney(num) {
+            return num.toLocaleString();
         }
 
-        async function fetchWeather(lat, lon) {
-            const iconEl = document.getElementById('icon');
-            const percentEl = document.getElementById('rain-percent');
-            const adviceEl = document.getElementById('advice');
+        function updateUI() {
+            document.getElementById('player-money').textContent = formatMoney(playerMoney);
+            document.getElementById('ai-money').textContent = formatMoney(aiMoney);
+            document.getElementById('pot-money').textContent = formatMoney(potMoney);
+        }
 
-            try {
-                // Open-Meteo API 호출 (오늘 하루 최고 강수확률 조회)
-                const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=precipitation_probability_max&timezone=auto`);
-                const data = await response.json();
-                
-                const rainProb = data.daily.precipitation_probability_max[0];
-                percentEl.textContent = `강수확률 ${rainProb}%`;
+        // 족보 계산 로직
+        function evaluateJokbo(card1, card2) {
+            const m1 = card1.month;
+            const m2 = card2.month;
+            const isK1 = card1.type === 'kwang';
+            const isK2 = card2.type === 'kwang';
 
-                // 강수확률에 따른 우산 지침 및 이모지 설정
-                if (rainProb >= 70) {
-                    iconEl.textContent = '🌧️';
-                    adviceEl.textContent = '우산 꼭 챙기세요! 비가 올 확률이 매우 높아요.';
-                    adviceEl.style.color = '#f43f5e'; // Red
-                } else if (rainProb >= 40) {
-                    iconEl.textContent = '🌦️';
-                    adviceEl.textContent = '접이식 우산 하나 챙기시는 걸 추천해요!';
-                    adviceEl.style.color = '#fbbf24'; // Yellow
-                } else if (rainProb >= 20) {
-                    iconEl.textContent = '⛅';
-                    adviceEl.textContent = '흐릿하지만 우산 없이 나가도 괜찮을 것 같아요.';
-                    adviceEl.style.color = '#38bdf8'; // Blue
-                } else {
-                    iconEl.textContent = '☀️';
-                    adviceEl.textContent = '우산은 집에 두고 가세요! 가벼운 발걸음으로 출발~';
-                    adviceEl.style.color = '#4ade80'; // Green
-                }
-
-                iconEl.classList.remove('pop-anim');
-                void iconEl.offsetWidth;
-                iconEl.classList.add('pop-anim');
-
-            } catch (error) {
-                // API 오류 발생 시 모의 데이터 제공
-                const mockProb = Math.floor(Math.random() * 10) * 10;
-                percentEl.textContent = `강수확률 ${mockProb}% (임시)`;
-                adviceEl.textContent = mockProb >= 50 ? '우산을 챙기시는 것이 좋아 보여요!' : '오늘은 우산 없이 외출해도 좋을 것 같아요.';
+            // 1. 광땡
+            if (isK1 && isK2) {
+                if ((m1 === 3 && m2 === 8) || (m1 === 8 && m2 === 3)) return { score: 1000, name: '38광땡 👑' };
+                if ((m1 === 1 && m2 === 3) || (m1 === 3 && m2 === 1)) return { score: 990, name: '13광땡 ✨' };
+                if ((m1 === 1 && m2 === 8) || (m1 === 8 && m2 === 1)) return { score: 980, name: '18광땡 ✨' };
             }
+
+            // 2. 땡 (같은 월 2장)
+            if (m1 === m2) {
+                return { score: 800 + m1, name: `${m1 === 10 ? '장땡' : m1 + '땡'} 🔥` };
+            }
+
+            // 3. 특수 족보 (알리, 독사, 구핑, 장빙, 장사, 세륙)
+            const months = [m1, m2].sort((a, b) => a - b);
+            const key = `${months[0]}-${months[1]}`;
+
+            const specialJokbo = {
+                '1-2': { score: 700, name: '알리 🐍' },
+                '1-4': { score: 690, name: '독사 🐍' },
+                '1-9': { score: 680, name: '구핑 🎯' },
+                '1-10': { score: 670, name: '장빙 ❄️' },
+                '4-10': { score: 660, name: '장사 🏹' },
+                '4-6': { score: 650, name: '세륙 🎲' }
+            };
+
+            if (specialJokbo[key]) {
+                return specialJokbo[key];
+            }
+
+            // 4. 특수 잡이/구사 패 처리
+            // 암행어사 (4월 열 + 7월 열)
+            if ((card1.id === 7 && card2.id === 13) || (card1.id === 13 && card2.id === 7)) {
+                return { score: 1, name: '암행어사 🗡️ (광땡 잡이/1끗)', isSecretAgent: true };
+            }
+            // 땡잡이 (3월 광 + 7월 열)
+            if ((card1.id === 5 && card2.id === 13) || (card1.id === 13 && card2.id === 5)) {
+                return { score: 0, name: '땡잡이 🎯 (9땡 이하 잡이/망통)', isDdaengCatcher: true };
+            }
+            // 구사 (4월 + 9월)
+            if (key === '4-9') {
+                return { score: 0, name: '구사 🔄 (알리 이하 재경기)', isGusa: true };
+            }
+
+            // 5. 끗 (합의 일의 자리)
+            const gkut = (m1 + m2) % 10;
+            if (gkut === 9) return { score: 100 + gkut, name: '갑오 (9끗) 👍' };
+            if (gkut === 0) return { score: 100, name: '망통 (0끗) 💩' };
+            return { score: 100 + gkut, name: `${gkut}끗` };
+        }
+
+        // 덱 셔플 및 판돈 초기화
+        function startGame() {
+            if (playerMoney < baseBet || aiMoney < baseBet) {
+                alert('잔액이 부족합니다! 판돈을 가질 수 없어 새로 시작합니다.');
+                playerMoney = 100000;
+                aiMoney = 100000;
+            }
+
+            if (!isReMatch) {
+                potMoney = baseBet * 2;
+                playerMoney -= baseBet;
+                aiMoney -= baseBet;
+            } else {
+                isReMatch = false; // 재경기 후 초기화
+            }
+
+            updateUI();
+
+            // 덱 섞기
+            currentDeck = [...DECK_DATA].sort(() => Math.random() - 0.5);
+
+            playerCards = [currentDeck.pop(), currentDeck.pop()];
+            aiCards = [currentDeck.pop(), currentDeck.pop()];
+
+            // 카드 보이기 (플레이어 카드 전면, AI 카드 후면)
+            renderCards('player-cards', playerCards, true);
+            renderCards('ai-cards', aiCards, false);
+
+            const playerJokbo = evaluateJokbo(playerCards[0], playerCards[1]);
+            document.getElementById('player-jokbo').textContent = `내 족보: ${playerJokbo.name}`;
+            document.getElementById('ai-jokbo').textContent = `---`;
+
+            // 버튼 활성화
+            document.getElementById('btn-start').disabled = true;
+            document.getElementById('btn-call').disabled = false;
+            document.getElementById('btn-raise').disabled = false;
+            document.getElementById('btn-die').disabled = false;
+        }
+
+        // 카드 랜더링
+        function renderCards(elementId, cards, showFront) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            cards.forEach(card => {
+                const cardDiv = document.createElement('div');
+                if (showFront) {
+                    cardDiv.className = `card front pop-animation`;
+                    cardDiv.innerHTML = `
+                        <div class="card-month">${card.month}월</div>
+                        <div class="card-icon">${card.icon}</div>
+                        <div class="card-type ${card.type}">${card.type === 'kwang' ? '光' : card.type === 'yeol' ? '열' : '피'}</div>
+                    `;
+                } else {
+                    cardDiv.className = `card back`;
+                }
+                container.appendChild(cardDiv);
+            });
+        }
+
+        // 베팅 액션
+        function playerAction(action) {
+            if (action === 'die') {
+                aiMoney += potMoney;
+                showMessage('패배 😭', `다이하셨습니다. 컴퓨터가 판돈 ${formatMoney(potMoney)}원을 획득했습니다.`);
+                resetGameAfterRound();
+                return;
+            }
+
+            let betAmount = 10000;
+
+            if (action === 'raise') {
+                if (playerMoney < betAmount * 2) {
+                    alert('잔액이 부족하여 레이즈 할 수 없습니다!');
+                    return;
+                }
+                playerMoney -= betAmount * 2;
+                aiMoney -= betAmount;
+                potMoney += betAmount * 3;
+            } else if (action === 'call') {
+                if (playerMoney < betAmount) {
+                    alert('잔액이 부족합니다!');
+                    return;
+                }
+                playerMoney -= betAmount;
+                aiMoney -= betAmount;
+                potMoney += betAmount * 2;
+            }
+
+            updateUI();
+            showResult();
+        }
+
+        // 결과 비교 및 판정
+        function showResult() {
+            renderCards('ai-cards', aiCards, true); // AI 카드 공개
+
+            let pJokbo = evaluateJokbo(playerCards[0], playerCards[1]);
+            let aJokbo = evaluateJokbo(aiCards[0], aiCards[1]);
+
+            document.getElementById('ai-jokbo').textContent = `상대 족보: ${aJokbo.name}`;
+
+            // 특수 족보 잡기 로직 적용
+            // 1. 암행어사: 13, 18광땡 잡기 (38광땡 제외)
+            if (pJokbo.isSecretAgent && (aJokbo.score === 990 || aJokbo.score === 980)) {
+                pJokbo.score = 2000; // 승리 확정
+            }
+            if (aJokbo.isSecretAgent && (pJokbo.score === 990 || pJokbo.score === 980)) {
+                aJokbo.score = 2000;
+            }
+
+            // 2. 땡잡이: 1땡~9땡 잡기 (장땡, 광땡 제외)
+            if (pJokbo.isDdaengCatcher && (aJokbo.score >= 801 && aJokbo.score <= 809)) {
+                pJokbo.score = 1500;
+            }
+            if (aJokbo.isDdaengCatcher && (pJokbo.score >= 801 && pJokbo.score <= 809)) {
+                aJokbo.score = 1500;
+            }
+
+            // 3. 구사: 알리 이하 판돈 이월 재경기
+            if ((pJokbo.isGusa && aJokbo.score <= 700) || (aJokbo.isGusa && pJokbo.score <= 700)) {
+                isReMatch = true;
+                showMessage('구사! 🔄 (재경기)', `상대와 나의 족보가 알리 이하이므로 구사가 성립되었습니다! 판돈(${formatMoney(potMoney)}원)을 이월하고 재경기를 시작합니다.`);
+                resetGameAfterRound();
+                return;
+            }
+
+            // 승패 판정
+            setTimeout(() => {
+                if (pJokbo.score > aJokbo.score) {
+                    playerMoney += potMoney;
+                    showMessage('승리! 🎉', `나 [${pJokbo.name}] vs 상대 [${aJokbo.name}]<br>판돈 <strong>${formatMoney(potMoney)}원</strong>을 획득하셨습니다!`);
+                } else if (pJokbo.score < aJokbo.score) {
+                    aiMoney += potMoney;
+                    showMessage('패배 😭', `나 [${pJokbo.name}] vs 상대 [${aJokbo.name}]<br>상대가 <strong>${formatMoney(potMoney)}원</strong>을 가져갑니다.`);
+                } else {
+                    // 무승부 (동점) -> 재경기
+                    isReMatch = true;
+                    showMessage('무승부 (동점) 🤝', `동일한 족보입니다 [${pJokbo.name}]! 판돈(${formatMoney(potMoney)}원)을 이월하여 재경기를 진행합니다.`);
+                }
+                resetGameAfterRound();
+            }, 600);
+        }
+
+        function showMessage(title, desc) {
+            document.getElementById('msg-title').innerHTML = title;
+            document.getElementById('msg-desc').innerHTML = desc;
+            document.getElementById('message-box').style.display = 'block';
+        }
+
+        function closeMessage() {
+            document.getElementById('message-box').style.display = 'none';
+        }
+
+        function resetGameAfterRound() {
+            if (!isReMatch) {
+                potMoney = 0;
+            }
+            updateUI();
+            document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-call').disabled = true;
+            document.getElementById('btn-raise').disabled = true;
+            document.getElementById('btn-die').disabled = true;
         }
     </script>
 </body>
 </html>
 """
 
-with open("rain_probability_checker.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+with open("seotda_game.html", "w", encoding="utf-8") as f:
+    f.write(seotda_html)
 
-print("Rain Probability HTML file generated successfully.")
+print("Seotda game HTML generated successfully.")
